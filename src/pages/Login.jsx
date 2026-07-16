@@ -6,7 +6,7 @@ import {
   signInWithEmailAndPassword
 } from '../services/firebase';
 
-const OWNER_EMAIL = 'vendedora@leidyshop.com';
+const OWNER_EMAIL = 'jahteseguire@hotmail.com';
 const OWNER_PASSWORD = 'leidyshop123';
 
 function Login() {
@@ -60,7 +60,7 @@ function Login() {
         <button type="submit">Ingresar</button>
       </form>
       <p>{mensaje}</p>
-      <small>Usuario demo: vendedora@leidyshop.com / leidyshop123</small>
+      
     </section>
   );
 }
