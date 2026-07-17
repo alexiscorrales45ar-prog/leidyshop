@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { productos } from '../services/productos';
 import CardProducto from '../components/CardProducto';
 import Buscador from '../components/Buscador';
 

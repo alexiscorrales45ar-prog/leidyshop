@@ -27,7 +27,7 @@ const formularioBase = {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [productosAdmin, setProductosAdmin] = useState(() => readProductos());
+  const [productosAdmin, setProductosAdmin] = useState([]);
   const [formulario, setFormulario] = useState(formularioBase);
   const [editingId, setEditingId] = useState(null);
   const [status, setStatus] = useState('');
@@ -43,22 +43,18 @@ function Dashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const cargarDesdeFirebase = async () => {
-      if (isFirebaseConfigured) {
-        const productosCloud = await fetchProductosFromFirebase();
+    console.log("Firebase configurado:", isFirebaseConfigured);
 
-        if (productosCloud.length > 0) {
-          setProductosAdmin(productosCloud);
-        }
-      }
+    const cargarDesdeFirebase = async () => {
+      if (!isFirebaseConfigured) return;
+
+      const productosCloud = await fetchProductosFromFirebase();
+
+      setProductosAdmin(productosCloud);
     };
 
     cargarDesdeFirebase();
   }, []);
-
-  useEffect(() => {
-    saveProductos(productosAdmin);
-  }, [productosAdmin]);
 
   const categorias = [...new Set(productosAdmin.map((producto) => producto.categoria))];
   const totalInventario = productosAdmin.reduce((acc, producto) => acc + producto.precio * producto.stock, 0);
@@ -70,6 +66,7 @@ function Dashboard() {
 
   const handleImagen = async (event) => {
     const file = event.target.files?.[0];
+    console.log("Se presionó Agregar producto");
 
     if (!file) {
       return;
@@ -133,10 +130,19 @@ function Dashboard() {
     }
 
     if (isFirebaseConfigured) {
-      const id = await saveProductoToFirebase(productoData);
-      setProductosAdmin((prev) => [{ ...productoData, id }, ...prev]);
-      setStatus('Producto guardado en Firebase.');
-    } else {
+  try {
+    console.log("Voy a guardar en Firestore", productoData);
+    const id = await saveProductoToFirebase(productoData);
+    console.log("ID recibido:", id);
+    console.log("Producto guardado. ID:", id);
+
+    setProductosAdmin((prev) => [{ ...productoData, id }, ...prev]);
+    setStatus("Producto guardado en Firebase.");
+  } catch (error) {
+    console.error("Error Firebase:", error);
+    setStatus(error.message);
+  }
+} else {
       setProductosAdmin((prev) => [{ ...productoData, id: Date.now() }, ...prev]);
       setStatus('Producto agregado localmente.');
     }
