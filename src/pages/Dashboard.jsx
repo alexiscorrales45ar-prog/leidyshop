@@ -83,6 +83,7 @@ function Dashboard() {
 
     if (imageUrl) {
       setFormulario((prev) => ({ ...prev, imagen: imageUrl }));
+     
       setStatus('Foto subida correctamente.');
       return;
     }
@@ -99,6 +100,7 @@ function Dashboard() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    
 
     const productoData = {
       nombre: formulario.nombre,
