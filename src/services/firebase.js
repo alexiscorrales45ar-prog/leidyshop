@@ -15,12 +15,6 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from 'firebase/storage';
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -36,48 +30,74 @@ const isFirebaseConfigured = Object.values(firebaseConfig).every(Boolean);
 let app = null;
 let auth = null;
 let db = null;
-let storage = null;
 
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-  storage = getStorage(app);
 }
 
-export { app, auth, db, storage, isFirebaseConfigured, signInWithEmailAndPassword, signOut };
+export {
+  app,
+  auth,
+  db,
+  isFirebaseConfigured,
+  signInWithEmailAndPassword,
+  signOut
+};
+
+// ==============================
+// SUBIR IMÁGENES A CLOUDINARY
+// ==============================
 
 export async function uploadProductImage(file) {
-  if (!storage || !file) {
-    return '';
+  if (!file) return '';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'catalogo_unsigned');
+
+  const response = await fetch(
+    'https://api.cloudinary.com/v1_1/dwws4xld/image/upload',
+    {
+      method: 'POST',
+      body: formData
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error(data);
+    throw new Error(data.error?.message || 'Error al subir la imagen');
   }
 
-  const fileRef = ref(storage, `productos/${Date.now()}-${file.name}`);
-  await uploadBytes(fileRef, file);
-  return await getDownloadURL(fileRef);
+  return data.secure_url;
 }
 
+// ==============================
+// PRODUCTOS (FIRESTORE)
+// ==============================
+
 export async function fetchProductosFromFirebase() {
-  if (!db) {
-    return [];
-  }
+  if (!db) return [];
 
   const productosRef = collection(db, 'productos');
   const productosQuery = query(productosRef, orderBy('createdAt', 'desc'));
+
   const snapshot = await getDocs(productosQuery);
 
-  return snapshot.docs.map((item) => ({
-    id: item.id,
-    ...item.data()
+  return snapshot.docs.map((docItem) => ({
+    id: docItem.id,
+    ...docItem.data()
   }));
 }
 
 export async function saveProductoToFirebase(producto) {
-  if (!db) {
-    return null;
-  }
+  if (!db) return null;
 
   const productosRef = collection(db, 'productos');
+
   const docRef = await addDoc(productosRef, {
     ...producto,
     createdAt: new Date().toISOString()
@@ -87,31 +107,33 @@ export async function saveProductoToFirebase(producto) {
 }
 
 export async function updateProductoStockInFirebase(productoId, stock) {
-  if (!db) {
-    return null;
-  }
+  if (!db) return null;
 
   const productoRef = doc(db, 'productos', productoId);
-  await updateDoc(productoRef, { stock: Number(stock) });
+
+  await updateDoc(productoRef, {
+    stock: Number(stock)
+  });
+
   return true;
 }
 
 export async function updateProductoInFirebase(productoId, producto) {
-  if (!db) {
-    return null;
-  }
+  if (!db) return null;
 
   const productoRef = doc(db, 'productos', productoId);
+
   await updateDoc(productoRef, producto);
+
   return true;
 }
 
 export async function deleteProductoFromFirebase(productoId) {
-  if (!db) {
-    return null;
-  }
+  if (!db) return null;
 
   const productoRef = doc(db, 'productos', productoId);
+
   await deleteDoc(productoRef);
+
   return true;
 }

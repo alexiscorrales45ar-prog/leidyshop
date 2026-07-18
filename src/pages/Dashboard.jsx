@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  readProductos,
-  saveProductos,
   readVendedorWhatsapp,
   saveVendedorWhatsapp
 } from '../services/productos';
