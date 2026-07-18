@@ -1,29 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { readProductos } from '../services/productos';
 import { isFirebaseConfigured, fetchProductosFromFirebase } from '../services/firebase';
 import CardProducto from '../components/CardProducto';
 import Buscador from '../components/Buscador';
 
 function Inicio() {
   const [buscar, setBuscar] = useState('');
-  const [productosCatalogo, setProductosCatalogo] = useState(() => readProductos());
+  const [productosCatalogo, setProductosCatalogo] = useState([]);
 
   useEffect(() => {
-    const cargarProductos = async () => {
-      if (isFirebaseConfigured) {
-        const productosCloud = await fetchProductosFromFirebase();
+  const cargarProductos = async () => {
+    if (!isFirebaseConfigured) return;
 
-        if (productosCloud.length > 0) {
-          setProductosCatalogo(productosCloud);
-          return;
-        }
-      }
+    const productosCloud = await fetchProductosFromFirebase();
+    setProductosCatalogo(productosCloud);
+  };
 
-      setProductosCatalogo(readProductos());
-    };
-
-    cargarProductos();
-  }, []);
+  cargarProductos();
+}, []);
 
   const productosFiltrados = productosCatalogo.filter((producto) =>
     producto.nombre.toLowerCase().includes(buscar.toLowerCase()) ||
